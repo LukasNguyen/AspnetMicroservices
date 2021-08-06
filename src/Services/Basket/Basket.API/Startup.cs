@@ -1,17 +1,13 @@
 using Basket.API.GrpcServices;
 using Basket.API.Repositories;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static Discount.Grpc.Protos.DiscountProtoService;
 
 namespace Basket.API
@@ -28,12 +24,17 @@ namespace Basket.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddStackExchangeRedisCache(options =>
-                options.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString"));
+            //Redis Configuration
+            RedisConfiguration(services);
 
+            //General Configuration
             services.AddScoped<IBasketRepository, BasketRepository>();
 
+            //gRPC Configuration
             RegisterGrpcClientService(services);
+
+            //Masstransit-RabbitMQ Configuration
+            RegisterMassTransit(services);
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -42,12 +43,31 @@ namespace Basket.API
             });
         }
 
+        private void RedisConfiguration(IServiceCollection services)
+        {
+            services.AddStackExchangeRedisCache(options =>
+                options.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString"));
+        }
+
         private void RegisterGrpcClientService(IServiceCollection services)
         {
             services.AddGrpcClient<DiscountProtoServiceClient>(options =>
                 options.Address = new Uri(Configuration["GrpcSettings:DiscountUrl"]));
 
             services.AddScoped<DiscountGrpcService>();
+        }
+
+        private void RegisterMassTransit(IServiceCollection services)
+        {
+            services.AddMassTransit(config =>
+            {
+                config.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(Configuration["EventBusSettings:HostAddress"]);
+                });
+            });
+
+            services.AddMassTransitHostedService();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
