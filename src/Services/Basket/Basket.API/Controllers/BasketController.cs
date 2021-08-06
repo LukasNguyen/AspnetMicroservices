@@ -68,7 +68,7 @@ namespace Basket.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<IActionResult>> Checkout([FromBody] BasketCheckout basketCheckout)
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
         {
             // Get existing basket with total price
             var basket = await basketRepository.GetBasket(basketCheckout.UserName);

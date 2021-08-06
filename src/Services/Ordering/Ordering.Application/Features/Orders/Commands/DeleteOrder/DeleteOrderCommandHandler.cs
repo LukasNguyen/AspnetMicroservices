@@ -35,7 +35,7 @@ namespace Ordering.Application.Features.Orders.Commands.DeleteOrder
             }
 
             await orderRepository.DeleteAsync(orderToDelete);
-            logger.LogInformation($"Order {orderToDelete.Id} is successfully deleted.");
+            logger.LogInformation("Order {orderId} is successfully deleted.", orderToDelete.Id);
 
             return Unit.Value;
         }
