@@ -29,6 +29,7 @@ namespace Basket.API
 
             //General Configuration
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddAutoMapper(typeof(Startup));
 
             //gRPC Configuration
             RegisterGrpcClientService(services);
