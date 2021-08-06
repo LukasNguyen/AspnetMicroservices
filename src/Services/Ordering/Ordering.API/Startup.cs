@@ -1,4 +1,5 @@
 using Eventbus.Messages.Common;
+using Eventbus.Messages.Events;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -9,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using Ordering.API.EventBusConsumer;
 using Ordering.Application;
 using Ordering.Infrastructure;
+using RabbitMQ.Client;
 
 namespace Ordering.API
 {
@@ -53,6 +55,23 @@ namespace Ordering.API
                     cfg.ReceiveEndpoint(EventBusConstants.BasketCheckoutQueue, c =>
                     {
                         c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
+
+                        // Add this line to change exchange type to topic (default is fanout)
+                        c.Bind<BasketCheckoutEvent>(c =>
+                        {
+                            c.ExchangeType = ExchangeType.Topic;
+                        });
+
+                        // If you are binding the messages types to the receive endpoint that are the same as message types in the consumer,
+                        // you need to disable the automatic exchange binding.
+                        // This will prevent MassTransit from trying to bind the messages types of the consumer on the endpoint.
+
+
+                        // for MassTransit versions v6 and earlier
+                        // endpoint.BindMessageExchanges = false;
+
+                        // for MassTransit versions 7 and onward
+                        c.ConfigureConsumeTopology = false; // Need to add this code to resolve the issue after changing echange type to Topic cause we need to bind the message.
                     });
                 });
             });

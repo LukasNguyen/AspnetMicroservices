@@ -1,5 +1,6 @@
 using Basket.API.GrpcServices;
 using Basket.API.Repositories;
+using Eventbus.Messages.Events;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using RabbitMQ.Client;
 using System;
 using static Discount.Grpc.Protos.DiscountProtoService;
 
@@ -65,6 +67,12 @@ namespace Basket.API
                 config.UsingRabbitMq((ctx, cfg) =>
                 {
                     cfg.Host(Configuration["EventBusSettings:HostAddress"]);
+
+                    // Add this line to change exchange type to topic (default is fanout)
+                    cfg.Publish<BasketCheckoutEvent>(c =>
+                    {
+                        c.ExchangeType = ExchangeType.Topic;
+                    });
                 });
             });
 
