@@ -10,4 +10,4 @@ namespace Shopping.Aggregator.Models
 
         public IEnumerable<OrderResponseModel> Orders { get; set; }
     }
-}
+} 
